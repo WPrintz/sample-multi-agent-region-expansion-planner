@@ -107,7 +107,7 @@ def planning_report_generator(source_region: str, target_regions: List, analysis
             output_directory= "./analysis_results"
 
             # Execute the multi-region expansion planning analysis
-            response = agent(f"Perform multi-region expansion planning for {target_regions} regions and source region {source_region} using the input data {analysis_input_data}. write any output to `expansion_planning_report.md` as markdown file to `\.analysis_results` directory. Ensure you dont burn out max token limits in responding")
+            response = agent(f"Perform multi-region expansion planning for {target_regions} regions and source region {source_region} using the input data {analysis_input_data}. write any output to `expansion_planning_report.md` as markdown file to `/.analysis_results` directory. Ensure you dont burn out max token limits in responding")
 
         return response
 

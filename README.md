@@ -30,10 +30,10 @@ The system consists of several specialized agents:
 
 ## Prerequisites
 
-- Python 3.8+
-- AWS CLI configured with appropriate permissions
-- Access to AWS Knowledge Graph MCP server
-- Strands SDK
+- Python >= 3.10
+- AWS CLI installed
+- IAM user with the required permissions
+- Strands SDK (Installed automatically through requirements.txt)
 
 ## Installation
 
@@ -54,9 +54,76 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Configuration
+## AWS Profile Configuration 
 
-1. Configure Bedrock Model provider account AWS profile for authentication in `src/utils/config.py`:
+Create an IAM User with the below permissions 
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "CloudFormationAnalysis",
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:ListStacks",
+                "cloudformation:DescribeStacks",
+                "cloudformation:ListStackResources",
+                "cloudformation:DescribeStackResources"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CloudTrailAnalysis", 
+            "Effect": "Allow",
+            "Action": [
+                "cloudtrail:LookupEvents"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "BedrockAccess",
+            "Effect": "Allow", 
+            "Action": [
+                "bedrock:InvokeModel",
+                "bedrock:InvokeModelWithResponseStream"
+            ],
+            "Resource": [
+                "arn:aws:bedrock:*:*:inference-profile/us.anthropic.claude-sonnet-4-20250514-v1:0"
+            ]
+        }
+    ]
+}
+```
+
+### Setup Steps
+1. AWS Console → IAM → Users → Create User
+2. Attach policies → Create policy → JSON tab
+3. Paste the policy above → Review → Create policy
+4. Attach the policy to your user
+5. Security credentials → Create access key → Command Line Interface (CLI)
+6. Download or copy/paste credentials for AWS CLI configuration
+
+```bash
+aws configure --profile region-planner-user
+```
+
+When prompted, enter:
+- **AWS Access Key ID**: Your IAM user's access key
+- **AWS Secret Access Key**: Your IAM user's secret key
+- **Default region name**: us-east-1 (or your preferred source region)
+- **Default output format**: json
+
+To test profile configuration
+
+```bash
+# Verify credentials work
+aws sts get-caller-identity --profile region-planner-user
+```
+
+## Code Configuration
+
+1. Configure the Bedrock Model provider account AWS profile for authentication in `src/utils/config.py`:
 
 ```python
 class Constants:
@@ -66,7 +133,7 @@ class Constants:
     BEDROCK_AWS_CLI_PROFILE = "bedrock-profile" 
 ```
 
-2. Configure AWS account access for Resource Discovery and Regions Expansion Planning. Add AWS profile to access the account and target regions for planning.
+2. Configure AWS account access for Resource Discovery and Regions Expansion Planning. Add AWS profile to access the account and the target regions for planning.
 
 ```python
 class ExpansionPlaningInputs:
@@ -78,6 +145,13 @@ class ExpansionPlaningInputs:
 
 
 ## Usage
+
+### Clean Up Previous Analysis 
+Before running a new analysis, you can clean up previous results:
+
+```bash
+./cleanup.sh
+```
 
 ### Basic Usage
 
@@ -156,6 +230,18 @@ This project showcases the power of the AWS Knowledge Graph MCP server for:
 - **Best Practices**: Incorporates AWS Well-Architected principles
 - **Automation Ready**: Generates actionable deployment plans
 
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
 ## Support
 
 For questions or issues:
@@ -168,12 +254,3 @@ For questions or issues:
 - Built with the Strands SDK for multi-agent orchestration
 - Powered by AWS Knowledge Graph MCP for comprehensive service intelligence
 - Utilizes AWS CloudFormation and CloudTrail for infrastructure analysis
-
-## Security
-
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
-
-## License
-
-This library is licensed under the MIT-0 License. See the LICENSE file.
-
